@@ -51,116 +51,129 @@ export default function BuyerHomePage() {
     Number(p.selling_price ?? p.retail_price ?? p.price ?? 0);
 
   return (
-    <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#142A2E] rounded-[2.5rem] p-2.5 shadow-2xl border border-white/10">
-        <div className="bg-[#142A2E] rounded-[2rem] overflow-hidden min-h-[640px] flex flex-col">
-          
-          <div className="px-5 pt-6 pb-3">
-            <p className="text-[12px] text-[#7EB6B8]">DIGITπ</p>
-            <h1 className="text-[18px] font-bold text-white mt-0.5">
+    <div className="min-h-screen bg-[#142A2E] text-white">
+      <div className="max-w-6xl mx-auto p-6 lg:p-10">
+        
+        {/* Top bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <div>
+            <p className="text-sm text-[#7EB6B8]">DIGITπ</p>
+            <h1 className="text-2xl lg:text-3xl font-bold mt-1">
               Hi {username}
             </h1>
-            <p className="text-[12px] text-[#9BB5B4] mt-0.5">
+            <p className="text-sm text-[#9BB5B4] mt-1">
               Your trusted partner for verified hardware
             </p>
           </div>
-
-          <div className="px-5 mb-3">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search marketplace"
-              className="w-full bg-[#1B3338] border border-white/10 rounded-full px-4 py-3 text-[13px] text-white outline-none placeholder:text-[#8B9998]"
-            />
-          </div>
-
-          <div className="px-5 mb-4">
-            <p className="text-[11px] text-[#8B9998] uppercase mb-2">
-              Need help fast
-            </p>
-            <div className="flex justify-between gap-2">
-              <Link href="/buyer/assistant" className="flex-1">
-                <div className="bg-[#1B3338] border border-white/10 rounded-2xl p-3 text-center">
-                  <div className="text-xl mb-1">🤖</div>
-                  <p className="text-[11px] font-medium text-white">Assistant</p>
-                </div>
-              </Link>
-              <Link href="/buyer/marketplace" className="flex-1">
-                <div className="bg-[#0F6E76] rounded-2xl p-3 text-center">
-                  <div className="text-xl mb-1">🛒</div>
-                  <p className="text-[11px] font-medium text-white">Marketplace</p>
-                </div>
-              </Link>
-              <Link href="/buyer/orders" className="flex-1">
-                <div className="bg-[#1B3338] border border-white/10 rounded-2xl p-3 text-center">
-                  <div className="text-xl mb-1 text-[#7EB6B8]">⇄</div>
-                  <p className="text-[11px] font-medium text-white">My Orders</p>
-                </div>
-              </Link>
-            </div>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-5 pb-3">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[13px] font-semibold text-white">
-                Recommended for you
-              </p>
-              <Link href="/buyer/marketplace" className="text-[11px] text-[#7EB6B8]">
-                See all
-              </Link>
-            </div>
-
-            {loading ? (
-              <p className="text-center text-[13px] text-[#8B9998] py-8">
-                Loading...
-              </p>
-            ) : filtered.length === 0 ? (
-              <div className="bg-[#1B3338] border border-white/10 rounded-xl p-5 text-center">
-                <p className="text-[13px] text-[#8B9998]">No products yet</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-3">
-                {filtered.slice(0, 6).map((p) => (
-                  <Link key={p.id} href="/buyer/marketplace">
-                    <div className="bg-[#1B3338] border border-white/10 rounded-xl p-3 h-full">
-                      <div className="h-16 rounded-lg bg-[#0F6E76]/30 mb-2 flex items-center justify-center text-[#7EB6B8] text-lg">
-                        🔧
-                      </div>
-                      <p className="text-[12px] font-semibold text-white line-clamp-2">
-                        {p.name}
-                      </p>
-                      <p className="text-[12px] font-bold text-[#7EB6B8] mt-1">
-                        KSh {priceOf(p).toLocaleString()}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-white/10 bg-[#1B3338] px-6 py-3 flex justify-between items-center">
+          <div className="flex gap-2">
             <Link
               href="/buyer/profile"
-              className="flex flex-col items-center gap-0.5"
+              className="px-4 py-2 rounded-xl bg-[#1B3338] border border-white/10 text-sm"
             >
-              <span className="text-xl">👤</span>
-              <span className="text-[10px] text-[#8B9998]">Profile</span>
-            </Link>
-            <Link href="/buyer" className="flex flex-col items-center gap-0.5">
-              <span className="text-xl">🏠</span>
-              <span className="text-[10px] text-[#7EB6B8] font-medium">Home</span>
+              Profile
             </Link>
             <Link
               href="/buyer/tracking"
-              className="flex flex-col items-center gap-0.5"
+              className="px-4 py-2 rounded-xl bg-[#1B3338] border border-white/10 text-sm"
             >
-              <span className="text-xl">📦</span>
-              <span className="text-[10px] text-[#8B9998]">Orders</span>
+              Track orders
             </Link>
           </div>
-
         </div>
+
+        {/* Search */}
+        <div className="mb-8">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search marketplace"
+            className="w-full max-w-xl bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none placeholder:text-[#8B9998]"
+          />
+        </div>
+
+        {/* Quick actions */}
+        <p className="text-xs text-[#8B9998] uppercase mb-3">Need help fast</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+          <Link href="/buyer/assistant">
+            <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-5 hover:border-[#0F6E76] transition h-full">
+              <p className="text-2xl mb-2">🤖</p>
+              <h2 className="font-semibold">Assistant</h2>
+              <p className="text-sm text-[#9BB5B4] mt-1">
+                Water, plumbing & purchase help
+              </p>
+            </div>
+          </Link>
+          <Link href="/buyer/marketplace">
+            <div className="rounded-2xl bg-[#0F6E76] p-5 hover:brightness-110 transition h-full">
+              <p className="text-2xl mb-2">🛒</p>
+              <h2 className="font-semibold">Marketplace</h2>
+              <p className="text-sm text-white/80 mt-1">
+                Browse verified hardware
+              </p>
+            </div>
+          </Link>
+          <Link href="/buyer/orders">
+            <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-5 hover:border-[#0F6E76] transition h-full">
+              <p className="text-2xl mb-2">⇄</p>
+              <h2 className="font-semibold">My Orders</h2>
+              <p className="text-sm text-[#9BB5B4] mt-1">
+                Cart, active & completed
+              </p>
+            </div>
+          </Link>
+        </div>
+
+        {/* Recommended */}
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold">Recommended for you</h2>
+          <Link href="/buyer/marketplace" className="text-sm text-[#7EB6B8]">
+            See all →
+          </Link>
+        </div>
+
+        {loading ? (
+          <p className="text-[#8B9998]">Loading...</p>
+        ) : filtered.length === 0 ? (
+          <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-8 text-center text-[#8B9998]">
+            No products to show yet
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filtered.slice(0, 8).map((p) => {
+              const imgs =
+                Array.isArray(p.image_urls) && p.image_urls.length
+                  ? p.image_urls
+                  : p.image_url
+                  ? [p.image_url]
+                  : [];
+              return (
+                <Link key={p.id} href={`/buyer/product/${p.id}`}>
+                  <div className="rounded-2xl bg-[#1B3338] border border-white/10 overflow-hidden hover:border-[#0F6E76] transition h-full">
+                    <div className="h-36 bg-[#0F6E76]/20 flex items-center justify-center overflow-hidden">
+                      {imgs[0] ? (
+                        <img
+                          src={imgs[0]}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-3xl text-[#7EB6B8]">🔧</span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <p className="font-medium text-sm line-clamp-2 min-h-[2.5rem]">
+                        {p.name}
+                      </p>
+                      <p className="text-[#7EB6B8] font-bold mt-2">
+                        KSh {priceOf(p).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
