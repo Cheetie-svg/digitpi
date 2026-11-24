@@ -9,13 +9,11 @@ function shortId(id: string) {
   return id ? id.slice(-8).toUpperCase() : "—";
 }
 
-export default function DeliveryOrdersPage() {
+export default function VendorOrdersPage() {
   const router = useRouter();
-  const [available, setAvailable] = useState<any[]>([]);
-  const [accepted, setAccepted] = useState<any[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState<string | null>(null);
-  const [message, setMessage] = useState("");
 
   const load = async () => {
     const {
@@ -25,24 +23,12 @@ export default function DeliveryOrdersPage() {
       router.push("/login");
       return;
     }
-
-    const [{ data: openJobs }, { data: mine }] = await Promise.all([
-      supabase
-        .from("orders")
-        .select("*")
-        .eq("status", "Ready for Pickup")
-        .is("delivery_id", null)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("orders")
-        .select("*")
-        .eq("delivery_id", user.id)
-        .in("status", ["Accepted", "Assigned", "Dispatched"])
-        .order("created_at", { ascending: false }),
-    ]);
-
-    setAvailable(openJobs || []);
-    setAccepted(mine || []);
+    const { data } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("vendor_id", user.id)
+      .order("created_at", { ascending: false });
+    setOrders(data || []);
     setLoading(false);
   };
 
@@ -50,176 +36,133 @@ export default function DeliveryOrdersPage() {
     load();
   }, [router]);
 
-  const updateRank = async (userId: string, delta: number) => {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("rank_points")
-      .eq("user_id", userId)
-      .maybeSingle();
-    const current = Number(profile?.rank_points ?? 50);
-    const next = Math.min(100, Math.max(0, current + delta));
-    await supabase
-      .from("profiles")
-      .update({ rank_points: next })
-      .eq("user_id", userId);
-  };
+  const pending = orders.filter((o) => o.status === "Pending");
+  const active = orders.filter((o) =>
+    ["Received", "Ready for Pickup"].includes(o.status)
+  );
 
-  const accept = async (orderId: string) => {
-    setActionId(orderId);
-    setMessage("");
+  const markReceived = async (order: any) => {
+    setActionId(order.id);
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { error } = await supabase
+    await supabase
       .from("orders")
-      .update({
-        status: "Accepted",
-        delivery_id: user.id,
-      })
-      .eq("id", orderId)
-      .eq("status", "Ready for Pickup");
+      .update({ status: "Received" })
+      .eq("id", order.id)
+      .eq("vendor_id", user.id);
 
-    if (error) {
-      setMessage(error.message);
-      setActionId(null);
-      return;
+    // reduce stock if product linked
+    if (order.product_id) {
+      const { data: product } = await supabase
+        .from("products")
+        .select("stock, stock_quantity")
+        .eq("id", order.product_id)
+        .maybeSingle();
+      if (product) {
+        const current = Number(product.stock ?? product.stock_quantity ?? 0);
+        const qty = Number(order.quantity || 1);
+        const next = Math.max(0, current - qty);
+        await supabase
+          .from("products")
+          .update({ stock: next })
+          .eq("id", order.product_id);
+      }
     }
 
-    await updateRank(user.id, 1.5);
-    setActionId(null);
-    router.push(`/delivery/order/${orderId}`);
-  };
-
-  const reject = async (orderId: string) => {
-    setActionId(orderId);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return;
-    await updateRank(user.id, -2.0);
-    setMessage("Rejected — order stays available for others");
     setActionId(null);
     await load();
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#142A2E] rounded-[2.5rem] p-2.5 shadow-2xl border border-white/10">
-        <div className="bg-[#142A2E] rounded-[2rem] overflow-hidden min-h-[640px] flex flex-col">
-          
-          <div className="px-5 pt-6 pb-3">
-            <h1 className="text-[16px] font-bold text-white">Delivery jobs</h1>
-            <p className="text-[12px] text-[#9BB5B4]">
-              Open a job before you accept or reject
-            </p>
+    <div className="min-h-screen bg-[#142A2E] text-white">
+      <div className="max-w-5xl mx-auto p-6 lg:p-10">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+          <div>
+            <p className="text-sm text-[#7EB6B8]">Vendor</p>
+            <h1 className="text-2xl font-bold mt-1">Orders</h1>
+            <p className="text-sm text-[#9BB5B4]">New jobs from DIGITπ</p>
           </div>
-
-          {message && (
-            <p className="text-center text-[12px] text-[#7EB6B8] px-5 mb-2">
-              {message}
-            </p>
-          )}
-
-          <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
-            
-            <div>
-              <p className="text-[11px] text-[#8B9998] uppercase mb-2">
-                Available (ready for pickup)
-              </p>
-              {loading ? (
-                <p className="text-[13px] text-[#8B9998]">Loading...</p>
-              ) : available.length === 0 ? (
-                <div className="bg-[#1B3338] border border-white/10 rounded-xl p-4 text-center text-[13px] text-[#8B9998]">
-                  No jobs waiting
-                </div>
-              ) : (
-                available.map((o) => (
-                  <div
-                    key={o.id}
-                    className="bg-[#1B3338] border border-white/10 rounded-xl p-4 mb-3"
-                  >
-                    <Link href={`/delivery/order/${o.id}`}>
-                      <p className="text-[11px] text-[#8B9998]">
-                        #{shortId(o.id)}
-                      </p>
-                      <p className="text-[14px] font-semibold text-white mt-0.5">
-                        {o.product_name}
-                      </p>
-                      <p className="text-[12px] text-[#9BB5B4] mt-1">
-                        Qty {o.quantity} · Tap for details
-                      </p>
-                      <p className="text-[12px] text-[#7EB6B8] mt-1">
-                        Fee: KSh{" "}
-                        {Number(o.delivery_fee ?? o.delivery_price ?? 150).toLocaleString()}
-                      </p>
-                    </Link>
-                    <div className="grid grid-cols-2 gap-2 mt-3">
-                      <button
-                        onClick={() => reject(o.id)}
-                        disabled={actionId === o.id}
-                        className="py-2 rounded-full bg-white/10 text-[#C64435] text-[12px] font-medium"
-                      >
-                        Reject
-                      </button>
-                      <button
-                        onClick={() => accept(o.id)}
-                        disabled={actionId === o.id}
-                        className="py-2 rounded-full bg-[#0F6E76] text-white text-[12px] font-medium"
-                      >
-                        {actionId === o.id ? "..." : "Accept"}
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div>
-              <p className="text-[11px] text-[#8B9998] uppercase mb-2">
-                Accepted (in progress)
-              </p>
-              {accepted.length === 0 ? (
-                <div className="bg-[#1B3338] border border-white/10 rounded-xl p-4 text-center text-[13px] text-[#8B9998]">
-                  None right now
-                </div>
-              ) : (
-                accepted.map((o) => (
-                  <Link key={o.id} href={`/delivery/order/${o.id}`}>
-                    <div className="bg-[#1B3338] border border-white/10 rounded-xl p-4 mb-3">
-                      <p className="text-[11px] text-[#8B9998]">
-                        #{shortId(o.id)}
-                      </p>
-                      <p className="text-[14px] font-semibold text-white mt-0.5">
-                        {o.product_name}
-                      </p>
-                      <p className="text-[12px] text-[#7EB6B8] mt-1">
-                        {o.status} · Open →
-                      </p>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="border-t border-white/10 bg-[#1B3338] px-6 py-3 flex justify-between">
-            <Link href="/delivery/profile" className="text-center">
-              <div className="text-xl">👤</div>
-              <div className="text-[10px] text-[#8B9998]">Profile</div>
+          <div className="flex gap-2">
+            <Link
+              href="/vendor/products"
+              className="px-4 py-2 rounded-xl bg-[#1B3338] border border-white/10 text-sm"
+            >
+              My Products
             </Link>
-            <Link href="/delivery/orders" className="text-center">
-              <div className="text-xl">🚚</div>
-              <div className="text-[10px] text-[#7EB6B8] font-medium">Jobs</div>
-            </Link>
-            <Link href="/delivery/completed" className="text-center">
-              <div className="text-xl">✓</div>
-              <div className="text-[10px] text-[#8B9998]">Completed</div>
+            <Link
+              href="/vendor/profile"
+              className="px-4 py-2 rounded-xl bg-[#1B3338] border border-white/10 text-sm"
+            >
+              Profile
             </Link>
           </div>
-
         </div>
+
+        {/* Pending */}
+        <h2 className="text-xs text-[#8B9998] uppercase mb-3">Pending</h2>
+        {loading ? (
+          <p className="text-[#8B9998] mb-8">Loading...</p>
+        ) : pending.length === 0 ? (
+          <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-8 text-center text-[#8B9998] mb-8">
+            No pending orders right now
+          </div>
+        ) : (
+          <div className="space-y-3 mb-10">
+            {pending.map((o) => (
+              <div
+                key={o.id}
+                className="rounded-2xl bg-[#1B3338] border border-white/10 p-5 flex flex-wrap items-center justify-between gap-4"
+              >
+                <div>
+                  <p className="text-xs text-[#8B9998]">#{shortId(o.id)}</p>
+                  <p className="font-medium mt-0.5">{o.product_name}</p>
+                  <p className="text-sm text-[#9BB5B4]">Qty {o.quantity}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Link href={`/vendor/order/${o.id}`}>
+                    <button className="px-4 py-2 rounded-xl border border-white/10 text-sm">
+                      Details
+                    </button>
+                  </Link>
+                  <button
+                    onClick={() => markReceived(o)}
+                    disabled={actionId === o.id}
+                    className="px-4 py-2 rounded-xl bg-[#0F6E76] text-sm font-medium disabled:opacity-60"
+                  >
+                    {actionId === o.id ? "..." : "Receive"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Active */}
+        <h2 className="text-xs text-[#8B9998] uppercase mb-3">Active</h2>
+        {active.length === 0 ? (
+          <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-8 text-center text-[#8B9998]">
+            Nothing in packing yet
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {active.map((o) => (
+              <Link key={o.id} href={`/vendor/order/${o.id}`}>
+                <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-5 hover:border-[#0F6E76] transition mb-3">
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="text-xs text-[#8B9998]">#{shortId(o.id)}</p>
+                      <p className="font-medium mt-0.5">{o.product_name}</p>
+                    </div>
+                    <span className="text-sm text-[#7EB6B8]">{o.status}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
