@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -8,7 +8,16 @@ import { supabase } from "../../lib/supabase";
 const ROLES = ["Buyer", "Vendor", "Delivery"] as const;
 const COUNTRIES = ["Kenya", "Uganda", "Tanzania", "Rwanda"];
 const COUNTIES_BY_COUNTRY: Record<string, string[]> = {
-  Kenya: ["Nairobi", "Mombasa", "Kisumu", "Nakuru", "Kiambu", "Machakos", "Kajiado", "Other"],
+  Kenya: [
+    "Nairobi",
+    "Mombasa",
+    "Kisumu",
+    "Nakuru",
+    "Kiambu",
+    "Machakos",
+    "Kajiado",
+    "Other",
+  ],
   Uganda: ["Kampala", "Wakiso", "Other"],
   Tanzania: ["Dar es Salaam", "Arusha", "Other"],
   Rwanda: ["Kigali", "Other"],
@@ -31,9 +40,17 @@ export default function SignupPage() {
 
   const counties = country ? COUNTIES_BY_COUNTRY[country] || ["Other"] : [];
 
-  const handleSignup = async () => {
+  const handleSignup = async (e?: FormEvent) => {
+    e?.preventDefault();
     setError("");
-    if (!fullName.trim() || !username.trim() || !phone.trim() || !email.trim() || !password) {
+
+    if (
+      !fullName.trim() ||
+      !username.trim() ||
+      !phone.trim() ||
+      !email.trim() ||
+      !password
+    ) {
       setError("Please fill all required fields");
       return;
     }
@@ -96,106 +113,158 @@ export default function SignupPage() {
     }
   };
 
-  const field = (
-    label: string,
-    children: React.ReactNode
-  ) => (
-    <div>
-      <p className="text-[12px] text-[#8B9998] uppercase mb-1">{label}</p>
-      {children}
-    </div>
-  );
-
   const inputClass =
-    "w-full bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-[14px] text-white outline-none";
+    "w-full bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-sm outline-none";
 
   return (
-    <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#142A2E] rounded-[2.5rem] p-2.5 shadow-2xl border border-white/10">
-        <div className="bg-[#142A2E] rounded-[2rem] overflow-hidden min-h-[620px] flex flex-col">
-          
-          <div className="flex items-center gap-3 px-5 pt-6 pb-3">
-            <Link
-              href="/"
-              className="w-8 h-8 rounded-full bg-[#1B3338] border border-white/10 flex items-center justify-center text-white"
-            >
-              ←
-            </Link>
-            <h1 className="text-[16px] font-bold text-white">Create account</h1>
+    <div className="min-h-screen bg-[#142A2E] text-white flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <Link href="/" className="text-sm text-[#7EB6B8]">
+          ← Home
+        </Link>
+        <h1 className="text-2xl font-bold mt-2 mb-6">Create account</h1>
+
+        <form onSubmit={handleSignup} className="space-y-3">
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-2">I am a</p>
+            <div className="flex gap-2">
+              {ROLES.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRole(r)}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-medium ${
+                    role === r
+                      ? "bg-[#0F6E76] text-white"
+                      : "bg-[#1B3338] border border-white/10 text-[#C7D6D4]"
+                  }`}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 space-y-3 pb-4">
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Full name</p>
+            <input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Username</p>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Phone</p>
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Email</p>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Password</p>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Country</p>
+            <select
+              value={country}
+              onChange={(e) => {
+                setCountry(e.target.value);
+                setCounty("");
+              }}
+              className={inputClass}
+            >
+              <option value="">Select country</option>
+              {COUNTRIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {country && (
             <div>
-              <p className="text-[12px] text-[#8B9998] uppercase mb-2">I am a</p>
-              <div className="flex gap-2">
-                {ROLES.map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => setRole(r)}
-                    className={`flex-1 py-2.5 rounded-full text-[12px] font-medium ${
-                      role === r
-                        ? "bg-[#0F6E76] text-white"
-                        : "bg-[#1B3338] border border-white/10 text-[#C7D6D4]"
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {field("Full name", <input value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} />)}
-            {field("Username", <input value={username} onChange={(e) => setUsername(e.target.value)} className={inputClass} />)}
-            {field("Phone", <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />)}
-            {field("Email", <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} />)}
-            {field("Password", <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />)}
-
-            {field(
-              "Country",
-              <select value={country} onChange={(e) => { setCountry(e.target.value); setCounty(""); }} className={inputClass}>
-                <option value="">Select country</option>
-                {COUNTRIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+              <p className="text-xs text-[#8B9998] uppercase mb-1">County</p>
+              <select
+                value={county}
+                onChange={(e) => setCounty(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">Select county</option>
+                {counties.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
-            )}
+            </div>
+          )}
 
-            {country &&
-              field(
-                "County",
-                <select value={county} onChange={(e) => setCounty(e.target.value)} className={inputClass}>
-                  <option value="">Select county</option>
-                  {counties.map((c) => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              )}
+          {county && (
+            <>
+              <div>
+                <p className="text-xs text-[#8B9998] uppercase mb-1">Town</p>
+                <input
+                  value={town}
+                  onChange={(e) => setTown(e.target.value)}
+                  placeholder="e.g. Westlands"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <p className="text-xs text-[#8B9998] uppercase mb-1">
+                  P.O. Box (optional)
+                </p>
+                <input
+                  value={poBox}
+                  onChange={(e) => setPoBox(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </>
+          )}
 
-            {county && (
-              <>
-                {field("Town", <input value={town} onChange={(e) => setTown(e.target.value)} placeholder="e.g. Westlands" className={inputClass} />)}
-                {field("P.O. Box (optional)", <input value={poBox} onChange={(e) => setPoBox(e.target.value)} className={inputClass} />)}
-              </>
-            )}
+          {error && (
+            <p className="text-sm text-[#C64435] text-center">{error}</p>
+          )}
 
-            {error && <p className="text-center text-[13px] text-[#C64435]">{error}</p>}
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#0F6E76] rounded-xl py-3.5 text-sm font-medium disabled:opacity-60"
+          >
+            {loading ? "Creating..." : "Create account"}
+          </button>
+        </form>
 
-          <div className="px-5 pb-6 space-y-3">
-            <button
-              onClick={handleSignup}
-              disabled={loading}
-              className="w-full bg-[#0F6E76] text-white rounded-full py-3.5 text-[14px] font-medium disabled:opacity-60"
-            >
-              {loading ? "Creating..." : "Create account"}
-            </button>
-            <Link href="/login">
-              <p className="text-center text-[13px] text-[#7EB6B8]">Already have an account? Log in</p>
-            </Link>
-          </div>
-
-        </div>
+        <p className="text-center text-sm text-[#7EB6B8] mt-6">
+          <Link href="/login">Already have an account? Log in</Link>
+        </p>
       </div>
     </div>
   );

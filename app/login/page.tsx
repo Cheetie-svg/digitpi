@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
@@ -12,7 +12,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e?: FormEvent) => {
+    e?.preventDefault();
     setError("");
     setLoading(true);
     try {
@@ -76,60 +77,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#142A2E] rounded-[2.5rem] p-2.5 shadow-2xl border border-white/10">
-        <div className="bg-[#142A2E] rounded-[2rem] overflow-hidden min-h-[620px] flex flex-col">
-          
-          <div className="flex items-center gap-3 px-5 pt-6 pb-3">
-            <Link
-              href="/"
-              className="w-8 h-8 rounded-full bg-[#1B3338] border border-white/10 flex items-center justify-center text-white"
-            >
-              ←
-            </Link>
-            <h1 className="text-[16px] font-bold text-white">Log in</h1>
+    <div className="min-h-screen bg-[#142A2E] text-white flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <Link href="/" className="text-sm text-[#7EB6B8]">
+          ← Home
+        </Link>
+        <h1 className="text-2xl font-bold mt-2 mb-6">Log in</h1>
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Email</p>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              className="w-full bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-sm outline-none"
+            />
+          </div>
+          <div>
+            <p className="text-xs text-[#8B9998] uppercase mb-1">Password</p>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              className="w-full bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-sm outline-none"
+            />
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 space-y-4 pb-4">
-            <div>
-              <p className="text-[12px] text-[#8B9998] uppercase mb-1">Email</p>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-[14px] text-white outline-none"
-              />
-            </div>
-            <div>
-              <p className="text-[12px] text-[#8B9998] uppercase mb-1">Password</p>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-[14px] text-white outline-none"
-              />
-            </div>
-            {error && (
-              <p className="text-center text-[13px] text-[#C64435]">{error}</p>
-            )}
-          </div>
+          {error && (
+            <p className="text-sm text-[#C64435] text-center">{error}</p>
+          )}
 
-          <div className="px-5 pb-6 space-y-3">
-            <button
-              onClick={handleLogin}
-              disabled={loading}
-              className="w-full bg-[#0F6E76] text-white rounded-full py-3.5 text-[14px] font-medium disabled:opacity-60"
-            >
-              {loading ? "Logging in..." : "Log in"}
-            </button>
-            <Link href="/signup">
-              <p className="text-center text-[13px] text-[#7EB6B8]">
-                Create account
-              </p>
-            </Link>
-          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#0F6E76] rounded-xl py-3.5 text-sm font-medium disabled:opacity-60"
+          >
+            {loading ? "Logging in..." : "Log in"}
+          </button>
+        </form>
 
-        </div>
+        <p className="text-center text-sm text-[#7EB6B8] mt-6">
+          <Link href="/signup">Create account</Link>
+        </p>
       </div>
     </div>
   );
