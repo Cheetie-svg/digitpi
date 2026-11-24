@@ -29,51 +29,42 @@ export default function AssistantPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#142A2E] rounded-[2.5rem] p-2.5 shadow-2xl border border-white/10">
-        <div className="bg-[#142A2E] rounded-[2rem] overflow-hidden min-h-[640px] flex flex-col">
-          
-          <div className="flex items-center gap-3 px-5 pt-6 pb-3">
-            <Link
-              href="/buyer"
-              className="w-8 h-8 rounded-full bg-[#1B3338] border border-white/10 flex items-center justify-center text-white"
+    <div className="min-h-screen bg-[#142A2E] text-white">
+      <div className="max-w-3xl mx-auto p-6 lg:p-10 flex flex-col min-h-screen">
+        <Link href="/buyer" className="text-sm text-[#7EB6B8]">
+          ← Home
+        </Link>
+        <h1 className="text-2xl font-bold mt-2 mb-6">Assistant</h1>
+
+        <div className="flex-1 space-y-3 mb-4 overflow-y-auto">
+          {messages.map((m, i) => (
+            <div
+              key={i}
+              className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+                m.role === "user"
+                  ? "ml-auto bg-[#0F6E76] text-white"
+                  : "bg-[#1B3338] border border-white/10 text-[#C7D6D4]"
+              }`}
             >
-              ←
-            </Link>
-            <h1 className="text-[16px] font-bold text-white">Assistant</h1>
-          </div>
+              {m.text}
+            </div>
+          ))}
+        </div>
 
-          <div className="flex-1 overflow-y-auto px-5 space-y-3 pb-3">
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`max-w-[85%] rounded-2xl px-3 py-2 text-[13px] ${
-                  m.role === "user"
-                    ? "ml-auto bg-[#0F6E76] text-white"
-                    : "bg-[#1B3338] border border-white/10 text-[#C7D6D4]"
-                }`}
-              >
-                {m.text}
-              </div>
-            ))}
-          </div>
-
-          <div className="px-5 pb-6 flex gap-2">
-            <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
-              placeholder="Ask about water or plumbing..."
-              className="flex-1 bg-[#1B3338] border border-white/10 rounded-full px-4 py-3 text-[13px] text-white outline-none placeholder:text-[#8B9998]"
-            />
-            <button
-              onClick={send}
-              className="px-4 rounded-full bg-[#0F6E76] text-white text-[13px] font-medium"
-            >
-              Send
-            </button>
-          </div>
-
+        <div className="flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Ask about water or plumbing..."
+            className="flex-1 bg-[#1B3338] border border-white/10 rounded-xl px-4 py-3 text-sm outline-none placeholder:text-[#8B9998]"
+          />
+          <button
+            onClick={send}
+            className="px-5 rounded-xl bg-[#0F6E76] font-medium"
+          >
+            Send
+          </button>
         </div>
       </div>
     </div>

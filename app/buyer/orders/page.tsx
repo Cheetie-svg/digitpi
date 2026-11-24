@@ -67,20 +67,16 @@ export default function BuyerOrdersPage() {
   }, [tab]);
 
   const active = orders.filter((o) =>
-    ["Pending", "Received", "Ready for Pickup", "Assigned", "Dispatched"].includes(
+    ["Pending", "Received", "Ready for Pickup", "Assigned", "Accepted", "Dispatched"].includes(
       o.status
     )
   );
   const completed = orders.filter((o) =>
     ["Delivered", "Reviewed", "Completed"].includes(o.status)
   );
-
   const list = tab === "active" ? active : tab === "completed" ? completed : [];
 
-  const cartTotal = cart.reduce(
-    (sum, c) => sum + c.unit_price * c.quantity,
-    0
-  );
+  const cartTotal = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0);
 
   const updateCartQty = (productId: string, delta: number) => {
     const next = cart
@@ -109,7 +105,6 @@ export default function BuyerOrdersPage() {
     if (cart.length === 0) return;
     setPlacing(true);
     setMessage("");
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -117,7 +112,6 @@ export default function BuyerOrdersPage() {
       router.push("/login");
       return;
     }
-
     for (const item of cart) {
       const { error } = await supabase.from("orders").insert({
         buyer_id: user.id,
@@ -135,7 +129,6 @@ export default function BuyerOrdersPage() {
         return;
       }
     }
-
     clearCart();
     setMessage("Orders placed from cart");
     setPlacing(false);
@@ -158,174 +151,147 @@ export default function BuyerOrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#142A2E] rounded-[2.5rem] p-2.5 shadow-2xl border border-white/10">
-        <div className="bg-[#142A2E] rounded-[2rem] overflow-hidden min-h-[640px] flex flex-col">
-          
-          <div className="flex items-center gap-3 px-5 pt-6 pb-3">
-            <Link
-              href="/buyer"
-              className="w-8 h-8 rounded-full bg-[#1B3338] border border-white/10 flex items-center justify-center text-white"
+    <div className="min-h-screen bg-[#142A2E] text-white">
+      <div className="max-w-4xl mx-auto p-6 lg:p-10">
+        <Link href="/buyer" className="text-sm text-[#7EB6B8]">
+          ← Home
+        </Link>
+        <h1 className="text-2xl font-bold mt-2 mb-6">My Orders</h1>
+
+        <div className="flex gap-2 mb-6">
+          {(
+            [
+              ["cart", "Cart"],
+              ["active", "Active"],
+              ["completed", "Completed"],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className={`px-4 py-2 rounded-full text-sm font-medium ${
+                tab === key
+                  ? "bg-[#0F6E76] text-white"
+                  : "bg-[#1B3338] border border-white/10 text-[#C7D6D4]"
+              }`}
             >
-              ←
-            </Link>
-            <h1 className="text-[16px] font-bold text-white">My Orders</h1>
-          </div>
+              {label}
+              {key === "cart" && cart.length > 0 ? ` (${cart.length})` : ""}
+            </button>
+          ))}
+        </div>
 
-          <div className="px-5 flex gap-2 mb-3">
-            {(
-              [
-                ["cart", "Cart"],
-                ["active", "Active"],
-                ["completed", "Completed"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={`flex-1 py-2 rounded-full text-[12px] font-medium ${
-                  tab === key
-                    ? "bg-[#0F6E76] text-white"
-                    : "bg-[#1B3338] text-[#9BB5B4] border border-white/10"
-                }`}
-              >
-                {label}
-                {key === "cart" && cart.length > 0 ? ` (${cart.length})` : ""}
-              </button>
-            ))}
-          </div>
+        {message && (
+          <p className="text-sm text-[#7EB6B8] mb-4">{message}</p>
+        )}
 
-          {message && (
-            <p className="text-center text-[12px] text-[#7EB6B8] px-5 mb-2">
-              {message}
-            </p>
-          )}
-
-          <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-3">
-            
-            {/* CART */}
-            {tab === "cart" && (
+        {tab === "cart" && (
+          <div className="space-y-3">
+            {cart.length === 0 ? (
+              <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-10 text-center">
+                <p className="text-[#8B9998]">Cart is empty</p>
+                <Link href="/buyer/marketplace">
+                  <button className="mt-4 px-5 py-2.5 rounded-xl bg-[#0F6E76] text-sm">
+                    Go to marketplace
+                  </button>
+                </Link>
+              </div>
+            ) : (
               <>
-                {cart.length === 0 ? (
-                  <div className="bg-[#1B3338] border border-white/10 rounded-xl p-5 text-center">
-                    <p className="text-[13px] text-[#8B9998]">Cart is empty</p>
-                    <Link href="/buyer/marketplace">
-                      <button className="mt-3 px-4 py-2 rounded-full bg-[#0F6E76] text-white text-[12px]">
-                        Go to marketplace
-                      </button>
-                    </Link>
-                  </div>
-                ) : (
-                  <>
-                    {cart.map((c) => (
-                      <div
-                        key={c.product_id}
-                        className="bg-[#1B3338] border border-white/10 rounded-xl p-3 flex gap-3"
-                      >
-                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-[#0F6E76]/20 flex-shrink-0">
-                          {c.image_url ? (
-                            <img
-                              src={c.image_url}
-                              alt={c.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[#7EB6B8]">
-                              🔧
-                            </div>
-                          )}
+                {cart.map((c) => (
+                  <div
+                    key={c.product_id}
+                    className="rounded-2xl bg-[#1B3338] border border-white/10 p-4 flex gap-4 items-center"
+                  >
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-[#0F6E76]/20 flex-shrink-0">
+                      {c.image_url ? (
+                        <img
+                          src={c.image_url}
+                          alt={c.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          🔧
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] font-semibold text-white truncate">
-                            {c.name}
-                          </p>
-                          <p className="text-[12px] text-[#7EB6B8]">
-                            KSh {c.unit_price.toLocaleString()} × {c.quantity}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <button
-                              onClick={() => updateCartQty(c.product_id, -1)}
-                              className="w-7 h-7 rounded-full bg-[#142A2E] border border-white/10 text-white text-sm"
-                            >
-                              −
-                            </button>
-                            <span className="text-white text-[13px]">
-                              {c.quantity}
-                            </span>
-                            <button
-                              onClick={() => updateCartQty(c.product_id, 1)}
-                              className="w-7 h-7 rounded-full bg-[#142A2E] border border-white/10 text-white text-sm"
-                            >
-                              +
-                            </button>
-                            <button
-                              onClick={() => removeFromCart(c.product_id)}
-                              className="ml-auto text-[11px] text-[#C64435]"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-
-                    <div className="bg-[#1B3338] border border-white/10 rounded-xl p-4">
-                      <div className="flex justify-between text-[14px]">
-                        <span className="text-[#9BB5B4]">Total</span>
-                        <span className="font-bold text-[#7EB6B8]">
-                          KSh {cartTotal.toLocaleString()}
-                        </span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{c.name}</p>
+                      <p className="text-sm text-[#7EB6B8]">
+                        KSh {c.unit_price.toLocaleString()} × {c.quantity}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => updateCartQty(c.product_id, -1)}
+                          className="w-8 h-8 rounded-full bg-[#142A2E] border border-white/10"
+                        >
+                          −
+                        </button>
+                        <span>{c.quantity}</span>
+                        <button
+                          onClick={() => updateCartQty(c.product_id, 1)}
+                          className="w-8 h-8 rounded-full bg-[#142A2E] border border-white/10"
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={() => removeFromCart(c.product_id)}
+                          className="ml-auto text-sm text-[#C64435]"
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
-
-                    <button
-                      onClick={placeCartOrders}
-                      disabled={placing}
-                      className="w-full py-3.5 rounded-full bg-[#0F6E76] text-white text-[14px] font-medium disabled:opacity-60"
-                    >
-                      {placing ? "Placing orders..." : "Order all in cart"}
-                    </button>
-                    <button
-                      onClick={clearCart}
-                      className="w-full py-3 rounded-full bg-[#1B3338] border border-white/10 text-[#C7D6D4] text-[13px]"
-                    >
-                      Clear cart
-                    </button>
-                  </>
-                )}
+                  </div>
+                ))}
+                <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-4 flex justify-between">
+                  <span className="text-[#9BB5B4]">Total</span>
+                  <span className="font-bold text-[#7EB6B8]">
+                    KSh {cartTotal.toLocaleString()}
+                  </span>
+                </div>
+                <button
+                  onClick={placeCartOrders}
+                  disabled={placing}
+                  className="w-full py-3.5 rounded-xl bg-[#0F6E76] font-medium disabled:opacity-60"
+                >
+                  {placing ? "Placing orders..." : "Order all in cart"}
+                </button>
+                <button
+                  onClick={clearCart}
+                  className="w-full py-3 rounded-xl bg-[#1B3338] border border-white/10 text-sm"
+                >
+                  Clear cart
+                </button>
               </>
             )}
+          </div>
+        )}
 
-            {/* ACTIVE / COMPLETED */}
-            {tab !== "cart" && loading && (
-              <p className="text-center text-[#8B9998] text-[13px]">Loading...</p>
-            )}
-
-            {tab !== "cart" && !loading && list.length === 0 && (
-              <div className="bg-[#1B3338] border border-white/10 rounded-xl p-5 text-center text-[13px] text-[#8B9998]">
+        {tab !== "cart" && (
+          <div className="space-y-3">
+            {loading ? (
+              <p className="text-[#8B9998]">Loading...</p>
+            ) : list.length === 0 ? (
+              <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-10 text-center text-[#8B9998]">
                 No {tab} orders
               </div>
-            )}
-
-            {tab !== "cart" &&
+            ) : (
               list.map((o) => (
                 <div
                   key={o.id}
-                  className="bg-[#1B3338] border border-white/10 rounded-xl p-4"
+                  className="rounded-2xl bg-[#1B3338] border border-white/10 p-4"
                 >
-                  <div className="flex justify-between">
+                  <div className="flex justify-between gap-4">
                     <div>
-                      <p className="text-[11px] text-[#8B9998]">
+                      <p className="text-xs text-[#8B9998]">
                         #{shortId(o.id)}
                       </p>
-                      <p className="text-[13px] font-semibold text-white mt-0.5">
-                        {o.product_name}
-                      </p>
-                      <p className="text-[11px] text-[#9BB5B4] mt-1">
-                        {o.status}
-                      </p>
+                      <p className="font-medium mt-0.5">{o.product_name}</p>
+                      <p className="text-sm text-[#9BB5B4] mt-1">{o.status}</p>
                     </div>
-                    <p className="text-[13px] text-[#7EB6B8] font-medium">
+                    <p className="text-[#7EB6B8] font-medium">
                       KSh {Number(o.total_amount || 0).toLocaleString()}
                     </p>
                   </div>
@@ -333,29 +299,27 @@ export default function BuyerOrdersPage() {
                     {o.status === "Pending" && (
                       <button
                         onClick={() => cancel(o.id)}
-                        className="px-3 py-1.5 rounded-full text-[11px] bg-white/10 text-[#C64435]"
+                        className="px-3 py-1.5 rounded-full text-xs bg-white/10 text-[#C64435]"
                       >
                         Cancel
                       </button>
                     )}
-                    {o.status === "Delivered" && (
-                      <Link href={`/buyer/review/${o.id}`}>
-                        <button className="px-3 py-1.5 rounded-full text-[11px] bg-[#0F6E76] text-white">
-                          Leave review
-                        </button>
-                      </Link>
-                    )}
                     <Link href="/buyer/returns">
-                      <button className="px-3 py-1.5 rounded-full text-[11px] bg-white/10 text-[#C7D6D4]">
+                      <button className="px-3 py-1.5 rounded-full text-xs bg-white/10">
                         Return / Replace
+                      </button>
+                    </Link>
+                    <Link href="/buyer/tracking">
+                      <button className="px-3 py-1.5 rounded-full text-xs bg-[#0F6E76]">
+                        Track
                       </button>
                     </Link>
                   </div>
                 </div>
-              ))}
+              ))
+            )}
           </div>
-
-        </div>
+        )}
       </div>
     </div>
   );

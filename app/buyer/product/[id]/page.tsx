@@ -48,13 +48,11 @@ export default function ProductDetailPage() {
         router.push("/login");
         return;
       }
-
       const { data } = await supabase
         .from("products")
         .select("*")
         .eq("id", productId)
         .maybeSingle();
-
       setProduct(data);
       setLoading(false);
     };
@@ -63,9 +61,8 @@ export default function ProductDetailPage() {
 
   const images: string[] = (() => {
     if (!product) return [];
-    if (Array.isArray(product.image_urls) && product.image_urls.length) {
+    if (Array.isArray(product.image_urls) && product.image_urls.length)
       return product.image_urls.filter(Boolean);
-    }
     if (product.image_url) return [product.image_url];
     return [];
   })();
@@ -79,9 +76,8 @@ export default function ProductDetailPage() {
     if (!product) return;
     const cart = loadCart();
     const existing = cart.find((c) => c.product_id === product.id);
-    if (existing) {
-      existing.quantity += qty;
-    } else {
+    if (existing) existing.quantity += qty;
+    else
       cart.push({
         product_id: product.id,
         name: product.name,
@@ -90,7 +86,6 @@ export default function ProductDetailPage() {
         image_url: images[0] || product.image_url,
         vendor_id: product.vendor_id,
       });
-    }
     saveCart(cart);
     setMessage("Added to cart");
   };
@@ -99,7 +94,6 @@ export default function ProductDetailPage() {
     if (!product) return;
     setOrdering(true);
     setMessage("");
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -107,7 +101,6 @@ export default function ProductDetailPage() {
       router.push("/login");
       return;
     }
-
     const { error } = await supabase.from("orders").insert({
       buyer_id: user.id,
       product_id: product.id,
@@ -118,13 +111,11 @@ export default function ProductDetailPage() {
       status: "Pending",
       vendor_id: product.vendor_id || null,
     });
-
     if (error) {
       setMessage(error.message);
       setOrdering(false);
       return;
     }
-
     setMessage("Order placed");
     setOrdering(false);
     router.push("/buyer/orders");
@@ -132,28 +123,27 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center">
-        <p className="text-white">Loading...</p>
+      <div className="min-h-screen bg-[#142A2E] text-white flex items-center justify-center">
+        Loading...
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-        <p className="text-white">Product not found</p>
+      <div className="min-h-screen bg-[#142A2E] text-white flex items-center justify-center">
+        Product not found
       </div>
     );
   }
 
-  // Full-screen image
   if (fullscreen) {
     return (
       <div className="min-h-screen bg-black flex flex-col">
         <div className="flex justify-end p-4">
           <button
             onClick={() => setFullscreen(null)}
-            className="w-10 h-10 rounded-full bg-white/20 text-white text-lg"
+            className="w-10 h-10 rounded-full bg-white/20 text-white"
           >
             ✕
           </button>
@@ -165,125 +155,115 @@ export default function ProductDetailPage() {
             className="max-w-full max-h-[85vh] object-contain"
           />
         </div>
-        <p className="text-center text-[12px] text-white/60 pb-6">
-          Tap ✕ to close
-        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0B1C1F] flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-[#142A2E] rounded-[2.5rem] p-2.5 shadow-2xl border border-white/10">
-        <div className="bg-[#142A2E] rounded-[2rem] overflow-hidden min-h-[640px] flex flex-col">
-          
-          <div className="flex items-center gap-3 px-5 pt-6 pb-3">
-            <Link
-              href="/buyer/marketplace"
-              className="w-8 h-8 rounded-full bg-[#1B3338] border border-white/10 flex items-center justify-center text-white"
-            >
-              ←
-            </Link>
-            <h1 className="text-[16px] font-bold text-white">Product details</h1>
+    <div className="min-h-screen bg-[#142A2E] text-white">
+      <div className="max-w-5xl mx-auto p-6 lg:p-10">
+        <Link href="/buyer/marketplace" className="text-sm text-[#7EB6B8]">
+          ← Marketplace
+        </Link>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+          <div>
+            {images.length === 0 ? (
+              <div className="h-80 rounded-2xl bg-[#1B3338] border border-white/10 flex items-center justify-center text-5xl text-[#7EB6B8]">
+                🔧
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setFullscreen(images[0])}
+                  className="w-full h-80 rounded-2xl overflow-hidden bg-[#1B3338] border border-white/10"
+                >
+                  <img
+                    src={images[0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+                {images.length > 1 && (
+                  <div className="flex gap-2 mt-3 overflow-x-auto">
+                    {images.map((src, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setFullscreen(src)}
+                        className="w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden border border-white/10"
+                      >
+                        <img
+                          src={src}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-[#8B9998] mt-2">
+                  Tap photo for full screen
+                </p>
+              </>
+            )}
           </div>
 
-          <div className="flex-1 overflow-y-auto pb-4">
-            
-            {/* Horizontal photo strip */}
-            <div className="px-5 mb-3">
-              {images.length === 0 ? (
-                <div className="h-48 rounded-xl bg-[#1B3338] border border-white/10 flex items-center justify-center text-4xl text-[#7EB6B8]">
-                  🔧
-                </div>
-              ) : (
-                <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory">
-                  {images.map((src, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setFullscreen(src)}
-                      className="snap-center flex-shrink-0 w-[85%] h-48 rounded-xl overflow-hidden bg-[#1B3338] border border-white/10"
-                    >
-                      <img
-                        src={src}
-                        alt={`${product.name} ${i + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-              {images.length > 1 && (
-                <p className="text-[11px] text-[#8B9998] mt-1">
-                  Swipe for more · tap photo for full screen
-                </p>
-              )}
+          <div className="space-y-4">
+            <h1 className="text-2xl font-bold">{product.name}</h1>
+            <p className="text-3xl font-bold text-[#7EB6B8]">
+              KSh {unit.toLocaleString()}
+            </p>
+            <p className="text-[#9BB5B4] leading-relaxed">
+              {product.description || "No description"}
+            </p>
+            <p className="text-sm text-[#8B9998]">
+              Stock: {product.stock ?? product.stock_quantity ?? "—"}
+            </p>
+
+            <div className="rounded-2xl bg-[#1B3338] border border-white/10 p-4">
+              <p className="text-xs text-[#8B9998] uppercase mb-2">Quantity</p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setQty((q) => Math.max(1, q - 1))}
+                  className="w-10 h-10 rounded-full bg-[#142A2E] border border-white/10"
+                >
+                  −
+                </button>
+                <span className="font-semibold w-8 text-center">{qty}</span>
+                <button
+                  onClick={() => setQty((q) => q + 1)}
+                  className="w-10 h-10 rounded-full bg-[#142A2E] border border-white/10"
+                >
+                  +
+                </button>
+                <span className="ml-auto text-[#7EB6B8] font-medium">
+                  Total KSh {total.toLocaleString()}
+                </span>
+              </div>
             </div>
 
-            <div className="px-5 space-y-3">
-              <div className="bg-[#1B3338] border border-white/10 rounded-xl p-4">
-                <h2 className="text-[16px] font-bold text-white">
-                  {product.name}
-                </h2>
-                <p className="text-[18px] font-bold text-[#7EB6B8] mt-2">
-                  KSh {unit.toLocaleString()}
-                </p>
-                <p className="text-[13px] text-[#9BB5B4] mt-3 leading-relaxed">
-                  {product.description || "No description"}
-                </p>
-                <p className="text-[12px] text-[#8B9998] mt-2">
-                  Stock: {product.stock ?? product.stock_quantity ?? "—"}
-                </p>
-              </div>
+            {message && (
+              <p className="text-sm text-[#7EB6B8]">{message}</p>
+            )}
 
-              <div className="bg-[#1B3338] border border-white/10 rounded-xl p-4">
-                <p className="text-[11px] text-[#8B9998] uppercase mb-2">
-                  Quantity
-                </p>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setQty((q) => Math.max(1, q - 1))}
-                    className="w-10 h-10 rounded-full bg-[#142A2E] border border-white/10 text-white text-lg"
-                  >
-                    −
-                  </button>
-                  <span className="text-white font-semibold text-[16px] w-8 text-center">
-                    {qty}
-                  </span>
-                  <button
-                    onClick={() => setQty((q) => q + 1)}
-                    className="w-10 h-10 rounded-full bg-[#142A2E] border border-white/10 text-white text-lg"
-                  >
-                    +
-                  </button>
-                  <span className="ml-auto text-[#7EB6B8] font-medium text-[14px]">
-                    KSh {total.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {message && (
-                <p className="text-center text-[13px] text-[#7EB6B8]">{message}</p>
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={addToCart}
+                className="py-3.5 rounded-xl bg-[#1B3338] border border-white/10 font-medium"
+              >
+                Add to cart
+              </button>
+              <button
+                onClick={orderNow}
+                disabled={ordering}
+                className="py-3.5 rounded-xl bg-[#0F6E76] font-medium disabled:opacity-60"
+              >
+                {ordering ? "..." : "Order"}
+              </button>
             </div>
           </div>
-
-          <div className="px-5 pb-6 grid grid-cols-2 gap-2">
-            <button
-              onClick={addToCart}
-              className="py-3.5 rounded-full bg-[#1B3338] border border-white/10 text-white text-[14px] font-medium"
-            >
-              Add to cart
-            </button>
-            <button
-              onClick={orderNow}
-              disabled={ordering}
-              className="py-3.5 rounded-full bg-[#0F6E76] text-white text-[14px] font-medium disabled:opacity-60"
-            >
-              {ordering ? "..." : "Order"}
-            </button>
-          </div>
-
         </div>
       </div>
     </div>
