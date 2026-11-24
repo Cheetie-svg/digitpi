@@ -80,7 +80,11 @@ export default function VendorProfilePage() {
                 Email support
               </div>
             </a>
-
+<Link href="/vendor/payout">
+  <div className="rounded-xl bg-[#1B3338] border border-white/10 px-4 py-3 text-[#7EB6B8]">
+    Payout →
+  </div>
+</Link>
             <button
               onClick={logout}
               className="w-full py-3 rounded-xl border border-[#C64435] text-[#C64435] text-sm font-medium"

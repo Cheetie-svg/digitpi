@@ -8,7 +8,12 @@ import { supabase } from "../../../lib/supabase";
 function shortId(id: string) {
   return id ? id.slice(-8).toUpperCase() : "—";
 }
-
+<Link
+  href="/vendor/payout"
+  className="px-4 py-2 rounded-xl bg-[#1B3338] border border-white/10 text-sm"
+>
+  Payout
+</Link>
 export default function VendorOrdersPage() {
   const router = useRouter();
   const [orders, setOrders] = useState<any[]>([]);
